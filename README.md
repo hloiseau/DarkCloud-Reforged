@@ -1,5 +1,7 @@
 # Dark Cloud Reforged
 
+[Aperçu pour l’édition européenne en français](README.fr.md)
+
 A cross-platform rewrite of the [Dark Cloud Enhanced Mod](https://github.com/Gundorada-Workshop/DarkCloud-Enhanced), originally built in C# with direct Windows process memory access. This version uses **PINE IPC** to communicate with PCSX2, making it compatible with modern PCSX2 builds (v1.7+ and Nightly) on **Windows, Linux, and macOS** — including Steam Deck.
 
 ## Steam Deck — One-Line Install

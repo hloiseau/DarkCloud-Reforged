@@ -46,7 +46,7 @@ class WeaponsMod(ModBase):
     def run(self):
         self.apply_once()
 
-    def apply_once(self):
+    def apply_once(self, *, adjust_lamb=True):
         # Check if already applied
         try:
             val = self.mem.read_short(BALANCE_CHECK_ADDR)
@@ -69,7 +69,7 @@ class WeaponsMod(ModBase):
                 log.debug("Balance write failed at %s: %s", hex(addr_final), e)
 
         # Lamb sword thresholds
-        for addr_val, value, wtype in LAMB_CHANGES:
+        for addr_val, value, wtype in LAMB_CHANGES if adjust_lamb else ():
             try:
                 if wtype == 'f64':
                     # PINE doesn't have write_double; write as two 32-bit

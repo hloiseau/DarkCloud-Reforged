@@ -100,13 +100,15 @@ def base_shop_changes(mem):
 
 def reroll_daily_rotation(mem, in_game_day):
     """Roll new daily items for each shop based on day cycle."""
-    rot = in_game_day % 5
-    for i, name in enumerate(_SHOP_ORDER):
-        table = _ROTATIONS[name][rot]
-        val = random.choice(table)
-        mem.write_short(_SAVE_ADDRS[i], val)
+    for address, item in zip(_SAVE_ADDRS, roll_daily_items(in_game_day)):
+        mem.write_short(address, item)
     log.info("Daily Shop Items rerolled!")
     set_daily_items_to_shop(mem)
+
+
+def roll_daily_items(in_game_day):
+    rotation = in_game_day % 5
+    return [random.choice(_ROTATIONS[name][rotation]) for name in _SHOP_ORDER]
 
 
 def set_daily_items_to_shop(mem):

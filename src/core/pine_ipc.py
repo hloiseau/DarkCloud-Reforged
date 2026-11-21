@@ -21,6 +21,7 @@ MSG_WRITE64 = 0x07
 MSG_VERSION = 0x08
 MSG_TITLE = 0x0B
 MSG_ID = 0x0C
+MSG_CRC = 0x0D
 MSG_STATUS = 0x0F
 
 IPC_OK = 0x00
@@ -175,26 +176,18 @@ class PineIPC:
                 payload += struct.pack("<BIQ", op, addr, cmd[2] & 0xFFFFFFFFFFFFFFFF)
 
         resp = self._send_recv(payload)
-        # Parse results
+        # PINE returns one status byte for the whole packet.
         results = []
-        off = 0
+        off = 1
         for cmd in commands:
             op = cmd[0]
-            status = resp[off]; off += 1
-            if status == IPC_FAIL:
-                results.append(None)
-                continue
             sz = _RESP_SIZES.get(op, 0)
             if sz == 0:
                 results.append(None)
-            elif sz == 1:
-                results.append(resp[off])
-            elif sz == 2:
-                results.append(struct.unpack("<H", resp[off:off+2])[0])
-            elif sz == 4:
-                results.append(struct.unpack("<I", resp[off:off+4])[0])
-            elif sz == 8:
-                results.append(struct.unpack("<Q", resp[off:off+8])[0])
+            else:
+                if off + sz > len(resp):
+                    raise PineError("Truncated PINE batch response")
+                results.append(int.from_bytes(resp[off:off + sz], "little"))
             off += sz
         return results
 
@@ -208,7 +201,7 @@ class PineIPC:
     def _read_string_cmd(self, opcode):
         resp = self._send_recv(struct.pack("<B", opcode))
         str_len = struct.unpack("<I", resp[1:5])[0]
-        return resp[5:5 + str_len].decode("utf-8", errors="replace")
+        return resp[5:5 + str_len].rstrip(b"\0").decode("utf-8", errors="replace")
 
     def version(self):
         return self._read_string_cmd(MSG_VERSION)
@@ -218,3 +211,6 @@ class PineIPC:
 
     def game_id(self):
         return self._read_string_cmd(MSG_ID)
+
+    def game_crc(self):
+        return self._read_string_cmd(MSG_CRC).upper()
